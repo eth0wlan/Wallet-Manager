@@ -14,7 +14,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-TOKEN = ""
+with open("token.txt", "r") as file:
+    TOKEN = file.read().strip()
 
 dp = Dispatcher()
 
@@ -52,7 +53,13 @@ money_status = ReplyKeyboardMarkup(
 async def wallet_button(message: Message):
 
     user_id = message.from_user.id
+
     wallet = get_wallet(user_id)
+
+    if wallet is None:
+        add_wallet(user_id)
+        wallet = get_wallet(user_id)
+
     money = wallet[0] / 100
 
     await message.answer(
@@ -110,8 +117,15 @@ async def remove_amount(message: Message, state: FSMContext):
         await message.answer("Введите число")
         return
 
+    wallet = get_wallet(user_id)
+
+    if money > wallet[0]:
+        await message.answer("Недостаточно денег")
+        await state.clear()
+        return
 
     remove_money(user_id, money)
+
     wallet = get_wallet(user_id)
     balance = wallet[0] / 100
 
@@ -120,7 +134,8 @@ async def remove_amount(message: Message, state: FSMContext):
         reply_markup=main_keyboard
     )
 
-    await state.clear()    
+    await state.clear()
+
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):

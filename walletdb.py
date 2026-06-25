@@ -24,8 +24,19 @@ def get_wallet(user_id):
         (user_id,)
     )
 
-    return cursor.fetchone()
+    wallet = cursor.fetchone()
 
+    if wallet is None:
+        add_wallet(user_id)
+
+        cursor.execute(
+            "SELECT money FROM wallets WHERE tg_id = ?",
+            (user_id,)
+        )
+
+        wallet = cursor.fetchone()
+
+    return wallet
 
 def add_wallet(user_id):
     cursor.execute(
