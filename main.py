@@ -9,7 +9,7 @@ from aiogram.filters import Command
 from userdb import add_user,get_user
 from aiogram import Router
 from aiogram.types import Message
-from walletdb import add_wallet,get_wallet,add_money,remove_money
+from walletdb import add_wallet,get_wallet,add_money,remove_money,get_trans
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -28,7 +28,7 @@ main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="Кошелек"),
-            KeyboardButton(text="История "),
+            KeyboardButton(text="История"),
         ],
         [
             KeyboardButton(text="➕ Пополнить"),
@@ -49,6 +49,34 @@ money_status = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 #BUTTON
+
+@dp.message(lambda message: message.text == "История")
+async def history_button(message: Message):
+
+    user_id = message.from_user.id
+    name = message.from_user.first_name
+    history = get_trans(user_id)
+
+    if not history:
+        await message.answer(
+            parse_mode="HTML"
+        )
+        return 
+
+    message_text = f"<b>Твоия история  {name}, \nКоличество операций: {len(history)}</b>\n\n"
+    for amount, type, date in history: 
+        emoji = "🟢" if type == 'Пополнение' else "🔴"
+        real_amount = amount / 100 
+        message_text += f"{emoji} <b>{type}:</b> {real_amount:.2f}€ | 🗓 {date}\n"
+        
+    await message.answer(
+        text=message_text,
+        parse_mode="HTML"
+    )
+
+
+
+
 @dp.message(lambda message: message.text == "Кошелек")
 async def wallet_button(message: Message):
 
