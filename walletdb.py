@@ -6,26 +6,27 @@ Path("data").mkdir(exist_ok=True)
 database = sqlite3.connect("data/walletdb.db")
 cursor = database.cursor()
 
-
+# Добавлен UNIQUE для tg_id, чтобы избежать дубликатов кошельков
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS wallets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tg_id INTEGER,
+    tg_id INTEGER UNIQUE, 
     money INTEGER DEFAULT 0
 )
 """)
 database.commit()
 
+# Добавлена пропущенная запятая после CURRENT_TIMESTAMP
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tg_id INTEGER,
     amount INTEGER,
     type TEXT,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    remarks TEXT
 )
+""")
 database.commit()
 
 
@@ -47,6 +48,7 @@ def get_wallet(user_id):
 
         wallet = cursor.fetchone()
 
+    # Возвращает кортеж, например (0,). Если нужно само число, пиши return wallet[0]
     return wallet
 
 def add_wallet(user_id):
@@ -54,10 +56,10 @@ def add_wallet(user_id):
         "INSERT OR IGNORE INTO wallets (tg_id, money) VALUES (?, ?)",
         (user_id, 0)
     )
-
     database.commit()
 
 def add_money(user_id, amount):
+    # Убран битый код "SET remark = rema SET"
     cursor.execute(
         """
         UPDATE wallets
@@ -73,7 +75,6 @@ def add_money(user_id, amount):
         """,
         (user_id, amount, "Пополнение")
     )
-
     database.commit()
 
 def get_trans(user_id):
@@ -102,4 +103,4 @@ def remove_money(user_id, amount):
         (user_id, amount, "Снятие")
     )
 
-    database.commit()    
+    database.commit()
