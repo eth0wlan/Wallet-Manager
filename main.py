@@ -59,9 +59,10 @@ async def history_button(message: Message):
 
     if not history:
         await message.answer(
+            text="<b>У тебя пока нет транзакций.</b>", 
             parse_mode="HTML"
         )
-        return 
+        return
 
     message_text = f"<b>Твоия история  {name}, \nКоличество операций: {len(history)}</b>\n\n"
     for amount, type, date in history: 
